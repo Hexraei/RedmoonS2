@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const cards = TSHIRT_DESIGNS.map(tshirt => {
             const isSelected = state.selectedTShirts.includes(tshirt.id);
             return `<div class="group">
-                <div class="relative aspect-[4/5] overflow-hidden no-rounded" style="background-color: #939393;"><img src="${tshirt.frontImage}" alt="${tshirt.designName}" class="w-full h-full object-contain no-rounded transition-transform duration-300 group-hover:scale-105" /></div>
+                <div class="relative aspect-[4/5] overflow-hidden no-rounded" style="background-color: #f3f3f3;"><img src="${tshirt.frontImage}" alt="${tshirt.designName}" class="w-full h-full object-contain no-rounded transition-transform duration-300 group-hover:scale-105" /></div>
                 <button data-action="toggle-tshirt" data-id="${tshirt.id}" class="w-full no-rounded small-caps text-sm py-2 mt-2 transition-colors ${isSelected ? 'bg-gray-400 text-black' : 'bg-black text-white hover:bg-gray-800'}">${isSelected ? 'Unselect' : 'Select'}</button>
             </div>`;
         }).join('');
