@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ipAddress: '',
         surveyId: `survey_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         questionIndex: 0,
-        textAnswer: '',
-        showStoryOverlay: false // <-- New state for the overlay
+        textAnswer: ''
     };
 
     // --- CONSTANTS ---
@@ -85,33 +84,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- RENDER FUNCTIONS ---
     const root = document.getElementById('root');
     const render = () => {
-        let currentPageHTML = '';
+        root.innerHTML = ''; // Clear previous content
         if (state.loading) {
-            currentPageHTML = getLoadingHTML();
-        } else {
-            switch (state.stage) {
-                case 'LANDING': currentPageHTML = getLandingHTML(); break;
-                case 'TSHIRT_SELECTION': currentPageHTML = getTshirtSelectionHTML(); break;
-                case 'PREFERENCES_INTRO': currentPageHTML = getPreferencesIntroHTML(); break;
-                case 'QUESTIONS': currentPageHTML = getQuestionsHTML(); break;
-                case 'REGISTRATION_INTRO': currentPageHTML = getRegistrationIntroHTML(); break;
-                case 'REGISTRATION': currentPageHTML = getRegistrationHTML(); break;
-                case 'COMPLETED': currentPageHTML = getCompletedHTML(); break;
-                default: currentPageHTML = getLandingHTML();
-            }
+            root.innerHTML = getLoadingHTML();
+            return;
         }
-        root.innerHTML = currentPageHTML;
-
-        // Handle the story overlay
-        if (state.showStoryOverlay) {
-            root.insertAdjacentHTML('beforeend', getStoryOverlayHTML());
-            root.classList.add('blur-sm');
-        } else {
-            root.classList.remove('blur-sm');
+        switch (state.stage) {
+            case 'LANDING': root.innerHTML = getLandingHTML(); break;
+            case 'TSHIRT_SELECTION': root.innerHTML = getTshirtSelectionHTML(); break;
+            case 'PREFERENCES_INTRO': root.innerHTML = getPreferencesIntroHTML(); break;
+            case 'QUESTIONS': root.innerHTML = getQuestionsHTML(); break;
+            case 'REGISTRATION_INTRO': root.innerHTML = getRegistrationIntroHTML(); break;
+            case 'REGISTRATION': root.innerHTML = getRegistrationHTML(); break;
+            case 'COMPLETED': root.innerHTML = getCompletedHTML(); break;
+            case 'STORY': root.innerHTML = getStoryHTML(); break;
+            default: root.innerHTML = getLandingHTML();
         }
     };
 
-    const handleStageChange = (newStage, delay = 2000) => {
+    const handleStageChange = (newStage, delay = 1000) => {
         state.loading = true;
         render();
         setTimeout(() => {
@@ -122,20 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- HTML TEMPLATES ---
-    const getStoryOverlayHTML = () => {
-        return `<div data-action="close-story" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4">
-            <div class="bg-white text-black p-8 relative max-w-2xl w-full max-h-[90vh] overflow-y-auto no-rounded" onclick="event.stopPropagation()">
-                <button data-action="close-story" class="absolute top-2 right-4 text-4xl font-thin text-gray-600 hover:text-black">&times;</button>
-                <h2 class="text-3xl font-light mb-6 text-[#8B0909]">The Story of Redmoon</h2>
-                <div class="space-y-4 text-sm small-caps tracking-wider font-light">
-                    <p>Back in September 2025, we were sitting with a challenge from AUSEC: “Come up with a revolutionary solution to an everyday problem, and turn it into a business idea.” Sounds simple, right? Except when you actually sit down, every idea feels either too small or too big. After a lot of back-and-forth, one problem kept pulling our attention — fashion.</p>
-                    <p>Here’s the thing: fashion today feels broken. On one side, there’s fast fashion — those t-shirts that look good for a season but fade, stretch, or tear before you know it. Cheap to buy, expensive for the planet. On the other side, there’s luxury fashion — and let’s be honest, half the time they’re selling basics at prices that feel more like a joke. We couldn’t stop asking ourselves: is there a way to do this differently? To make clothes that last, feel premium, but don’t make your wallet cry? We weren’t sure at first… but spoiler alert: it was possible.</p>
-                    <p>That’s how Redmoon was born. A global fashion brand built on one simple idea — timeless clothes that people actually want to wear, again and again. No chasing trends, no over-the-top pricing, just premium quality at fair prices. We keep our margins small, because our goal isn’t squeezing profit — it’s building trust. And at the core, Redmoon isn’t really ours, it’s everyone’s. It’s shaped by the people who wear it, molded by their voices. We’re here to stand between disposable fast fashion and unreachable luxury, and to show there’s a better way. That’s the Redmoon story — and honestly, it’s only just starting.</p>
-                </div>
-            </div>
-        </div>`;
-    };
-
     const getLoadingHTML = () => `<div class="flex flex-col items-center justify-center min-h-screen bg-white"><div class="text-center animate-pulse"><img src="./images/logo/loader.png" alt="REDMOON Loading" class="w-16 h-8 md:w-20 md:h-10 object-contain mx-auto"/></div></div>`;
     const getLandingHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Fashion - Built by Your <span class="font-semibold text-[#8B0909]">Choice and Voice</span></h1><div class="text-black text-xs sm:text-sm max-w-lg"><p class="mb-4">Your opinion shapes our designs. Participate in this survey to co-create our next collection and earn the <span class="font-bold text-black">BADGE of LOYALTY</span>, unlocking a 40% discount and exclusive member perks.</p></div><button data-action="start-survey" class="text-black text-base md:text-lg underline hover:no-underline bg-transparent border-none p-0 cursor-pointer small-caps tracking-wider" style="text-decoration: underline; text-underline-offset: 4px;">START SURVEY ></button></div></div><div><p class="text-black text-xs sm:text-sm max-w-md font-medium">We value your data and privacy. All information collected is used solely to enhance our products and services.</p></div></div>`;
     const getTshirtSelectionHTML = () => {
@@ -177,6 +154,22 @@ document.addEventListener('DOMContentLoaded', () => {
         </div></div>`;
     };
     const getCompletedHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Thank You for Your <span class="font-semibold text-[#8B0909]">Contribution</span></h1><div class="text-black text-base md:text-lg max-w-2xl"><p>We sincerely appreciate your time and thoughtful feedback. You have officially earned the <span class="font-semibold text-[#8B0909]">BADGE of LOYALTY</span>, granting you a 40% discount and founding membership in the REDMOON community.</p></div><div class="text-black text-xs sm:text-sm max-w-2xl"><p>Your insights are invaluable in creating an apparel collection that truly represents MIT's unique identity. Please look forward to exclusive updates and early access to our launch.</p></div><div class="text-black text-xs small-caps max-w-2xl mt-8"><p>To learn more about REDMOON's journey and why it started, please <span data-action="learn-more" class="underline cursor-pointer">click here</span>.</p></div></div></div><div><div class="text-black text-xs space-y-2"><p>2025 REDMOON, Official Merchandise of MIT</p><p>For Queries contact redmoon.mit@gmail.com</p></div></div></div>`;
+    const getStoryHTML = () => {
+        return `<div class="bg-white text-black min-h-screen flex flex-col justify-start p-8">
+                <div class="w-full flex justify-end">
+                    <button data-action="back-to-completed" class="text-5xl font-thin text-gray-600 hover:text-black leading-none">&times;</button>
+                </div>
+                <div class="max-w-3xl mx-auto flex-grow w-full mt-4">
+                    <h1 class="text-4xl md:text-5xl font-light mb-8 text-[#8B0909]">The Story of Redmoon</h1>
+                    <div class="space-y-4 text-sm small-caps tracking-wider font-light max-h-[65vh] overflow-y-auto pr-4">
+                        <p>Back in September 2025, we were sitting with a challenge from AUSEC: “Come up with a revolutionary solution to an everyday problem, and turn it into a business idea.” Sounds simple, right? Except when you actually sit down, every idea feels either too small or too big. After a lot of back-and-forth, one problem kept pulling our attention — fashion.</p>
+                        <p>Here’s the thing: fashion today feels broken. On one side, there’s fast fashion — those t-shirts that look good for a season but fade, stretch, or tear before you know it. Cheap to buy, expensive for the planet. On the other side, there’s luxury fashion — and let’s be honest, half the time they’re selling basics at prices that feel more like a joke. We couldn’t stop asking ourselves: is there a way to do this differently? To make clothes that last, feel premium, but don’t make your wallet cry? We weren’t sure at first… but spoiler alert: it was possible.</p>
+                        <p>That’s how Redmoon was born. A global fashion brand built on one simple idea — timeless clothes that people actually want to wear, again and again. No chasing trends, no over-the-top pricing, just premium quality at fair prices. We keep our margins small, because our goal isn’t squeezing profit — it’s building trust. And at the core, Redmoon isn’t really ours, it’s everyone’s. It’s shaped by the people who wear it, molded by their voices. We’re here to stand between disposable fast fashion and unreachable luxury, and to show there’s a better way. That’s the Redmoon story — and honestly, it’s only just starting.</p>
+                    </div>
+                </div>
+            </div>`;
+    };
+
 
     // --- EVENT HANDLING ---
     root.addEventListener('click', async (e) => {
@@ -241,12 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (action === 'learn-more') {
             e.preventDefault();
             logCompletedPageClick(state.ipAddress, state.surveyId);
-            state.showStoryOverlay = true;
-            render();
+            handleStageChange('STORY');
         }
-        if (action === 'close-story') {
-            state.showStoryOverlay = false;
-            render();
+        if (action === 'back-to-completed') {
+            handleStageChange('COMPLETED');
         }
     });
 
