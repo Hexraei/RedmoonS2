@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!noCors && !response.ok) throw new Error(`Server responded with status: ${response.status}`);
         } catch (error) {
-            if (action === 'submitRegistrationData' && error instanceof TypeError && error.message === 'Failed to fetch') {
-              console.warn("Caught 'Failed to fetch' error on registration, assuming success.");
+            if (error instanceof TypeError && error.message === 'Failed to fetch') {
+              console.warn(`Caught 'Failed to fetch' for action "${action}", assuming success.`);
               return;
             }
             console.error(`Failed to execute action "${action}"`, error);
@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitTshirtSelection = (ip, surveyId, selectedTShirts) => {
         const tshirtData = {};
         for (let i = 1; i <= 15; i++) tshirtData[`tshirt_${i}`] = selectedTShirts.includes(String(i)) ? 1 : 0;
-        sendData('submitTshirtSelection', { ip, surveyId, ...tshirtData }, true).catch(e => console.warn(e));
+        return sendData('submitTshirtSelection', { ip, surveyId, ...tshirtData }, true);
     };
     const logPreferencesIntroClick = (ip, surveyId) => sendData('logPreferencesIntroClick', { ip, surveyId }, true).catch(e => console.warn(e));
-    const submitQuestionAnswers = (ip, surveyId, answers) => sendData('submitQuestionAnswers', { ip, surveyId, ...answers }, true).catch(e => console.warn(e));
+    const submitQuestionAnswers = (ip, surveyId, answers) => sendData('submitQuestionAnswers', { ip, surveyId, ...answers }, true);
     const logRegistrationIntroClick = (ip, surveyId) => sendData('logRegistrationIntroClick', { ip, surveyId }, true).catch(e => console.warn(e));
     const submitRegistrationData = (ip, surveyId, registrationData) => sendData('submitRegistrationData', { ip, surveyId, ...registrationData }, true);
     const logCompletedPageClick = (ip, surveyId) => sendData('logCompletedPageClick', { ip, surveyId }, true).catch(e => console.warn(e));
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button data-action="submit-registration" ${!isFormValid ? 'disabled' : ''} class="bg-black text-white px-8 py-2 text-sm hover:bg-gray-800 no-rounded w-full font-bold small-caps disabled:opacity-50 disabled:cursor-not-allowed">COMPLETE SURVEY</button>
         </div></div>`;
     };
-    const getCompletedHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Thank You for Your <span class="font-semibold text-[#8B0909]">Contribution</span></h1><div class="text-black text-base md:text-lg max-w-2xl"><p>We sincerely appreciate your time and thoughtful feedback. You have officially earned the <span class="font-semibold text-[#8B0909]">BADGE of LOYALTY</span>, granting you a 40% discount and exclusive offers at REDMOON.</p></div><div class="text-black text-xs small-caps max-w-2xl mt-8"><p>To learn more about REDMOON's journey and why it started, please <span data-action="learn-more" class="underline cursor-pointer">click here</span>.</p></div></div></div><div><div class="text-black text-xs space-y-2"><p>2025 REDMOON, Official Merchandise of MIT</p><p>For Queries contact redmoon.mit@gmail.com</p></div></div></div>`;
+    const getCompletedHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Thank You for Your <span class="font-semibold text-[#8B0909]">Contribution</span></h1><div class="text-black text-base md:text-lg max-w-2xl"><p>We sincerely appreciate your time and thoughtful feedback. You have officially earned the <span class="font-semibold text-[#8B0909]">BADGE of LOYALTY</span>, granting you a 40% discount and founding membership in the REDMOON community.</p></div><div class="text-black text-xs sm:text-sm max-w-2xl"><p>Your insights are invaluable in creating an apparel collection that truly represents MIT's unique identity. Please look forward to exclusive updates and early access to our launch.</p></div><div class="text-black text-xs small-caps max-w-2xl mt-8"><p>To learn more about REDMOON's journey and why it started, please <span data-action="learn-more" class="underline cursor-pointer">click here</span>.</p></div></div></div><div><div class="text-black text-xs space-y-2"><p>2025 REDMOON, Official Merchandise of MIT</p><p>For Queries contact redmoon.mit@gmail.com</p></div></div></div>`;
     const getStoryHTML = () => {
         return `<div class="bg-white text-black min-h-screen flex flex-col justify-start p-8">
                 <div class="w-full flex justify-end">
@@ -169,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>`;
     };
-
 
     // --- EVENT HANDLING ---
     root.addEventListener('click', async (e) => {
@@ -190,8 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             render();
         }
         if (action === 'finalize-tshirts') {
-            submitTshirtSelection(state.ipAddress, state.surveyId, state.selectedTShirts);
             handleStageChange('PREFERENCES_INTRO', 2000);
+            await submitTshirtSelection(state.ipAddress, state.surveyId, state.selectedTShirts);
         }
         if (action === 'start-questions') {
             logPreferencesIntroClick(state.ipAddress, state.surveyId);
@@ -201,19 +200,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const answer = e.target.dataset.answer;
             const currentQuestion = QUESTIONS[state.questionIndex];
             state.answers[currentQuestion.id] = answer;
+            
             if (state.questionIndex < QUESTIONS.length - 1) {
                 state.questionIndex++;
                 render();
             } else {
-                submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
-                handleStageChange('REGISTRATION_INTRO');
+                state.loading = true;
+                render();
+                await submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
+                handleStageChange('REGISTRATION_INTRO', 0);
             }
         }
         if (action === 'submit-text-answer') {
             const currentQuestion = QUESTIONS[state.questionIndex];
             state.answers[currentQuestion.id] = state.textAnswer.trim() || 'No input provided';
-            submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
-            handleStageChange('REGISTRATION_INTRO');
+
+            state.loading = true;
+            render();
+            await submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
+            handleStageChange('REGISTRATION_INTRO', 0);
         }
         if (action === 'start-registration') {
             logRegistrationIntroClick(state.ipAddress, state.surveyId);
