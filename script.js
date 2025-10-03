@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ipAddress: '',
         surveyId: `survey_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         questionIndex: 0,
-        textAnswer: ''
+        textAnswer: '',
+        modalTshirtId: null // To track the currently previewed T-shirt
     };
 
     // --- CONSTANTS ---
@@ -115,16 +116,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- HTML TEMPLATES ---
     const getLoadingHTML = () => `<div class="flex flex-col items-center justify-center min-h-screen bg-white"><div class="text-center animate-pulse"><img src="./images/logo/loader.png" alt="REDMOON Loading" class="w-16 h-8 md:w-20 md:h-10 object-contain mx-auto"/></div></div>`;
     const getLandingHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Fashion - Built by Your <span class="font-semibold text-[#8B0909]">Choice and Voice</span></h1><div class="text-black text-xs sm:text-sm max-w-lg"><p class="mb-4">Your opinion shapes our designs. Participate in this survey to co-create our next collection and earn the <span class="font-bold text-black">BADGE of LOYALTY</span>, unlocking a 40% discount and exclusive member perks.</p></div><button data-action="start-survey" class="text-black text-base md:text-lg underline hover:no-underline bg-transparent border-none p-0 cursor-pointer small-caps tracking-wider" style="text-decoration: underline; text-underline-offset: 4px;">START SURVEY ></button></div></div><div><p class="text-black text-xs sm:text-sm max-w-md font-medium">We value your data and privacy. All information collected is used solely to enhance our products and services.</p></div></div>`;
+    
+    const getTshirtModalHTML = () => {
+        if (!state.modalTshirtId) return '';
+        const tshirt = TSHIRT_DESIGNS.find(t => t.id === state.modalTshirtId);
+        if (!tshirt) return '';
+        return `
+            <div data-action="close-tshirt-modal" class="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+                <div class="relative bg-white p-4 max-w-lg w-full no-rounded">
+                    <img src="${tshirt.frontImage}" alt="${tshirt.designName}" class="w-full h-auto object-contain" />
+                </div>
+                 <button data-action="close-tshirt-modal" class="absolute top-4 right-4 text-5xl font-thin text-white hover:text-gray-300 leading-none">&times;</button>
+            </div>
+        `;
+    };
+
     const getTshirtSelectionHTML = () => {
         const cards = TSHIRT_DESIGNS.map(tshirt => {
             const isSelected = state.selectedTShirts.includes(tshirt.id);
             return `<div class="group">
-                <div class="relative aspect-[4/5] overflow-hidden no-rounded" style="background-color: #f3f3f3;"><img src="${tshirt.frontImage}" alt="${tshirt.designName}" class="w-full h-full object-contain no-rounded transition-transform duration-300 group-hover:scale-105" /></div>
+                <div class="relative aspect-[4/5] overflow-hidden no-rounded cursor-pointer" style="background-color: #f3f3f3;">
+                    <img src="${tshirt.frontImage}" alt="${tshirt.designName}" data-action="show-tshirt-modal" data-id="${tshirt.id}" class="w-full h-full object-contain no-rounded transition-transform duration-300 group-hover:scale-105" />
+                </div>
                 <button data-action="toggle-tshirt" data-id="${tshirt.id}" class="w-full no-rounded small-caps text-sm py-2 mt-2 transition-colors ${isSelected ? 'bg-gray-400 text-black' : 'bg-black text-white hover:bg-gray-800'}">${isSelected ? 'Unselect' : 'Select'}</button>
             </div>`;
         }).join('');
-        return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen"><div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><p class="text-black text-sm md:text-base max-w-3xl mx-auto mb-4">REDMOON is built by you. Your selections on this page directly influence which designs we produce. Cast your vote and become a part of our design process.</p><p class="text-black text-xs md:text-sm">There is no limit to the number of designs you can select.</p></div><div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">${cards}</div><div class="text-center"><button data-action="finalize-tshirts" ${state.selectedTShirts.length === 0 ? 'disabled' : ''} class="bg-black text-white px-8 py-2 text-sm hover:bg-gray-800 no-rounded font-bold w-full max-w-2xl small-caps disabled:opacity-50 disabled:cursor-not-allowed">Submit Selections</button></div></div>`;
+        return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen">
+                <div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><p class="text-black text-sm md:text-base max-w-3xl mx-auto mb-4">REDMOON is built by you. Your selections on this page directly influence which designs we produce. Cast your vote and become a part of our design process.</p><p class="text-black text-xs md:text-sm">There is no limit to the number of designs you can select. Click on the tshirt to preview it at a larger size.</p></div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">${cards}</div>
+                <div class="text-center"><button data-action="finalize-tshirts" ${state.selectedTShirts.length === 0 ? 'disabled' : ''} class="bg-black text-white px-8 py-2 text-sm hover:bg-gray-800 no-rounded font-bold w-full max-w-2xl small-caps disabled:opacity-50 disabled:cursor-not-allowed">Submit Selections</button></div>
+            </div>
+            ${getTshirtModalHTML()}`;
     };
+    
     const getPreferencesIntroHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Share Your <span class="font-semibold text-[#8B0909]">Preferences</span></h1><div class="text-black text-xs sm:text-sm max-w-lg space-y-4"><p>Next, please answer a few short questions to help us refine the fit, feel, and design of our T-shirts.</p></div><button data-action="start-questions" class="text-black text-base md:text-lg underline hover:no-underline bg-transparent border-none p-0 cursor-pointer small-caps tracking-wider" style="text-decoration: underline; text-underline-offset: 4px;">CONTINUE ></button></div></div><div><p class="text-black text-xs sm:text-sm max-w-md font-medium">We value your data and privacy. All information collected is used solely to enhance our products and services.</p></div></div>`;
     const getQuestionsHTML = () => {
         const currentQuestion = QUESTIONS[state.questionIndex];
@@ -171,15 +195,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENT HANDLING ---
     root.addEventListener('click', async (e) => {
-        const action = e.target.dataset.action;
-        if (!action) return;
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+        const action = target.dataset.action;
 
         if (action === 'start-survey') {
             logSurveyStart(state.ipAddress, state.surveyId);
             handleStageChange('TSHIRT_SELECTION');
         }
         if (action === 'toggle-tshirt') {
-            const id = e.target.dataset.id;
+            const id = target.dataset.id;
             if (state.selectedTShirts.includes(id)) {
                 state.selectedTShirts = state.selectedTShirts.filter(tId => tId !== id);
             } else {
@@ -196,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             handleStageChange('QUESTIONS');
         }
         if (action === 'answer-question') {
-            const answer = e.target.dataset.answer;
+            const answer = target.dataset.answer;
             const currentQuestion = QUESTIONS[state.questionIndex];
             state.answers[currentQuestion.id] = answer;
             
@@ -242,6 +267,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (action === 'back-to-completed') {
             handleStageChange('COMPLETED');
+        }
+        if (action === 'show-tshirt-modal') {
+            state.modalTshirtId = target.dataset.id;
+            render();
+        }
+        if (action === 'close-tshirt-modal') {
+            state.modalTshirtId = null;
+            render();
         }
     });
 
