@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     root.addEventListener('input', (e) => {
-        const inputType = e.input;
+        const inputType = e.target.dataset.input;
         if (inputType === 'registration') {
             state.registrationData[e.target.id] = e.target.value;
             const button = root.querySelector('[data-action="submit-registration"]');
