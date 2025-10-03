@@ -9,13 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
             name: '',
             phone: '',
             personalEmail: '',
-            universityEmail: '',
         },
         ipAddress: '',
         surveyId: `survey_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         questionIndex: 0,
         textAnswer: '',
-        modalTshirtId: null // To track the currently previewed T-shirt
+        modalTshirtId: null
     };
 
     // --- CONSTANTS ---
@@ -77,7 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const logPreferencesIntroClick = (ip, surveyId) => sendData('logPreferencesIntroClick', { ip, surveyId }, true).catch(e => console.warn(e));
     const submitQuestionAnswers = (ip, surveyId, answers) => sendData('submitQuestionAnswers', { ip, surveyId, ...answers }, true);
-    const logRegistrationIntroClick = (ip, surveyId) => sendData('logRegistrationIntroClick', { ip, surveyId }, true).catch(e => console.warn(e));
     const submitRegistrationData = (ip, surveyId, registrationData) => sendData('submitRegistrationData', { ip, surveyId, ...registrationData }, true);
     const logCompletedPageClick = (ip, surveyId) => sendData('logCompletedPageClick', { ip, surveyId }, true).catch(e => console.warn(e));
     const trackError = (surveyId, message, stack) => sendData('trackError', { surveyId, message, stack }, true).catch(e => console.warn(e));
@@ -95,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'TSHIRT_SELECTION': root.innerHTML = getTshirtSelectionHTML(); break;
             case 'PREFERENCES_INTRO': root.innerHTML = getPreferencesIntroHTML(); break;
             case 'QUESTIONS': root.innerHTML = getQuestionsHTML(); break;
-            case 'REGISTRATION_INTRO': root.innerHTML = getRegistrationIntroHTML(); break;
             case 'REGISTRATION': root.innerHTML = getRegistrationHTML(); break;
             case 'COMPLETED': root.innerHTML = getCompletedHTML(); break;
             case 'STORY': root.innerHTML = getStoryHTML(); break;
@@ -142,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
         }).join('');
         return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen">
-                <div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><p class="text-black text-sm md:text-base max-w-3xl mx-auto mb-4">REDMOON is built by you. Your selections on this page directly influence which designs we produce. Cast your vote and become a part of our design process.</p><p class="text-black text-xs md:text-sm">There is no limit to the number of designs you can select. Click on the tshirt to preview it at a larger size.</p></div>
+                <div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><p class="text-black text-sm md:text-base max-w-3xl mx-auto mb-4">REDMOON is built by you. Your selections on this page directly influence which designs we produce. Cast your vote and become a part of our design process.</p><p class="text-black text-xs md:text-sm">There is no limit to the number of designs you can select.</p></div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">${cards}</div>
                 <div class="text-center"><button data-action="finalize-tshirts" ${state.selectedTShirts.length === 0 ? 'disabled' : ''} class="bg-black text-white px-8 py-2 text-sm hover:bg-gray-800 no-rounded font-bold w-full max-w-2xl small-caps disabled:opacity-50 disabled:cursor-not-allowed">Submit Selections</button></div>
             </div>
@@ -164,12 +161,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen"><div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><div class="grid grid-cols-8 gap-2 max-w-2xl mx-auto mb-8">${progressBars}</div></div><div class="max-w-2xl mx-auto"><div class="text-center"><h3 class="text-xl md:text-2xl text-black mb-8 font-light">${currentQuestion.question}</h3>${optionsHTML}</div></div></div>`;
     };
-    const getRegistrationIntroHTML = () => `<div class="flex flex-col justify-between min-h-screen p-8 text-left bg-white"><div><div class="mb-12"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain" /></div><div class="space-y-8 max-w-2xl"><h1 class="text-3xl md:text-5xl text-black font-light">Final Step: Claim Your <span class="font-semibold text-[#8B0909]">Badge of Loyalty</span></h1><div class="text-black text-xs sm:text-sm max-w-lg space-y-4"><p>As a thank you for your participation, please complete the form to secure your Badge and receive a <span class="font-bold text-black">40% discount</span> code for our launch.</p></div><button data-action="start-registration" class="text-black text-base md:text-lg underline hover:no-underline bg-transparent border-none p-0 cursor-pointer small-caps tracking-wider" style="text-decoration: underline; text-underline-offset: 4px;">PROCEED TO FORM ></button></div></div><div><p class="text-black text-xs sm:text-sm max-w-md font-medium">We value your data and privacy. All information collected is used solely to enhance our products and services.</p></div></div>`;
     const getRegistrationHTML = () => {
         const { name, phone, personalEmail } = state.registrationData;
         const isEmailValid = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         const isFormValid = name.trim() !== '' && phone.trim() !== '' && isEmailValid(personalEmail);
-        return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen"><div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Official Survey</h2><p class="text-black text-sm max-w-lg mx-auto mb-4">Please provide your details below to complete the survey.</p><p class="text-black text-sm max-w-lg mx-auto mb-6">Your <span class="font-semibold">BADGE of LOYALTY</span> and 40% discount will be sent directly to your personal email address.</p></div><div class="max-w-2xl mx-auto space-y-6">
+        return `<div class="container mx-auto px-4 sm:px-8 py-8 bg-white min-h-screen"><div class="text-center mb-4"><img src="./images/logo/redmoon_logo.png" alt="REDMOON" class="w-48 h-24 md:w-64 md:h-32 object-contain mx-auto" /><h2 class="text-2xl text-[#8B0909] mt-2 mb-4 font-bold small-caps tracking-wider">Final Step: Claim Your Badge</h2><p class="text-black text-sm max-w-lg mx-auto mb-4">Please provide your details below to complete the survey and secure your <span class="font-bold">40% discount</span>.</p><p class="text-black text-sm max-w-lg mx-auto mb-6">Your <span class="font-semibold">BADGE of LOYALTY</span> will be sent directly to your personal email address.</p></div><div class="max-w-2xl mx-auto space-y-6">
             <div><label for="name" class="text-black font-light small-caps">Full Name *</label><input data-input="registration" type="text" id="name" value="${state.registrationData.name}" class="w-full border border-[#8B0909] bg-white text-black px-3 py-2 mt-1 no-rounded focus:border-[#8B0909] focus:ring-0" required /></div>
             <div><label for="phone" class="text-black font-light small-caps">Phone Number *</label><input data-input="registration" type="tel" id="phone" value="${state.registrationData.phone}" class="w-full border border-[#8B0909] bg-white text-black px-3 py-2 mt-1 no-rounded focus:border-[#8B0909] focus:ring-0" required /></div>
             <div><label for="personalEmail" class="text-black font-light small-caps">Personal Email *</label><input data-input="registration" type="email" id="personalEmail" value="${state.registrationData.personalEmail}" class="w-full border border-[#8B0909] bg-white text-black px-3 py-2 mt-1 no-rounded focus:border-[#8B0909] focus:ring-0" required /></div>
@@ -232,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.loading = true;
                 render();
                 await submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
-                handleStageChange('REGISTRATION_INTRO', 0);
+                handleStageChange('REGISTRATION', 0);
             }
         }
         if (action === 'submit-text-answer') {
@@ -242,11 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             state.loading = true;
             render();
             await submitQuestionAnswers(state.ipAddress, state.surveyId, state.answers);
-            handleStageChange('REGISTRATION_INTRO', 0);
-        }
-        if (action === 'start-registration') {
-            logRegistrationIntroClick(state.ipAddress, state.surveyId);
-            handleStageChange('REGISTRATION');
+            handleStageChange('REGISTRATION', 0);
         }
         if (action === 'submit-registration') {
             state.loading = true;
