@@ -1,0 +1,16 @@
+body {
+  font-family: 'Zalado Sans', 'Inter', sans-serif;
+  min-height: 100vh;
+  background-color: white;
+  color: black;
+}
+
+/* Custom styles from the original design */
+.small-caps {
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 1px;
+}
+.no-rounded {
+  border-radius: 0 !important;
+}
