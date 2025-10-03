@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: '15', designName: 'Moonlight Sonata', frontImage: './images/tshirts/tshirt15.png' }
     ];
     const QUESTIONS = [
-        { id: 'bookmark_reason', question: 'What makes you bookmark clothing online?', options: ['Celebrity/influencer wore it', 'Friends buying it', 'Limited time discount', 'Looks premium', 'Good reviews'] },
         { id: 'last_purchase', question: 'Your last ₹500+ clothing purchase was for?', options: ['Job/college interview', 'Social event', 'Festival shopping', 'For daily', 'I buy under ₹500'] },
+        { id: 'bookmark_reason', question: 'What makes you bookmark clothing online?', options: ['Celebrity/influencer wore it', 'Friends buying it', 'Limited time discount', 'Looks premium', 'Good reviews'] },
         { id: 'shopping_trigger', question: 'When do you shop for clothes?', options: ['End of season sale', 'Month starting', 'Special occasion coming', 'Everyone has it (FOMO)', 'Based on my need'] },
         { id: 'price_perception', question: 'Seeing a ₹1000+ price tag, you think?', options: ['"Not worth it"', '"Wait for sale"', '"Check cheaper sites"', '"If quality is good..."', '"Screenshot for later"'] },
         { id: 'premium_motivation', question: "You'd pay premium for clothes if?", options: ['Viral on Instagram', 'Limited edition', 'Trusted brand', 'Quality and lifespan', "I won't pay premium"] },
